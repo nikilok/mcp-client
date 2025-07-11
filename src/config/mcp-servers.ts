@@ -5,7 +5,15 @@ export const MCP_SERVERS: MCPServerConfig[] = [
     name: 'hmrc-sponsorship',
     url: process.env.MCP_HMRC_SPONSORSHIP_URL || 'http://localhost:8000/mcp',
     description: 'HMRC Sponsorship List Service',
-    keywords: ['sponsorship', 'hmrc', 'list', 'company', 'sponsor']
+    keywords: ['sponsorship', 'hmrc', 'list', 'company', 'sponsor'],
+    tools: [
+      {
+        toolName: 'mcp_python-hmrc-s_search_company_search_get',
+        parameterMapping: {
+          'company_name': 'company_name' 
+        }
+      }
+    ]
   },
 ];
 

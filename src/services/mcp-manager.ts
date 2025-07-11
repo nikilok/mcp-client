@@ -92,8 +92,13 @@ export class MCPManager {
 
     console.log(`🎯 Querying ${relevantServers.length} relevant server(s) for: "${extractedQuery.companyName}"`);
 
+    const queryParameters = {
+      company_name: extractedQuery.companyName!,
+      ...extractedQuery.parameters 
+    };
+
     const queryPromises = relevantServers.map(client =>
-      client.queryCompany(extractedQuery.companyName!)
+      client.executeQuery(queryParameters)
     );
 
     const results = await Promise.allSettled(queryPromises);
@@ -109,6 +114,55 @@ export class MCPManager {
         };
       }
     });
+  }
+
+  async executeGenericQuery(serverName: string, toolName: string, parameters: Record<string, any>): Promise<MCPQueryResult> {
+    const client = this.clients.get(serverName);
+    
+    if (!client) {
+      return {
+        success: false,
+        error: `Server '${serverName}' not found`,
+        serverName: serverName
+      };
+    }
+
+    // Override tool selection for this specific query
+    const originalConfig = client.getConfig();
+    const tempConfig = {
+      ...originalConfig,
+      defaultTool: toolName
+    };
+
+    // Temporarily update the client config
+    const tempClient = new (client.constructor as any)(tempConfig);
+    await tempClient.connect();
+
+    try {
+      return await tempClient.executeQuery(parameters);
+    } finally {
+      await tempClient.disconnect();
+    }
+  }
+
+  async listAllAvailableTools(): Promise<Record<string, string[]>> {
+    const toolsPerServer: Record<string, string[]> = {};
+
+    for (const [serverName, client] of this.clients.entries()) {
+      if (client.isServerConnected()) {
+        try {
+          const tools = await (client as any).client?.listTools();
+          toolsPerServer[serverName] = tools?.tools?.map((t: any) => t.name) || [];
+        } catch (error) {
+          console.warn(`Failed to list tools for ${serverName}:`, error);
+          toolsPerServer[serverName] = [];
+        }
+      } else {
+        toolsPerServer[serverName] = [];
+      }
+    }
+
+    return toolsPerServer;
   }
 
   getServerStatus(): Array<{name: string, connected: boolean, url: string}> {
