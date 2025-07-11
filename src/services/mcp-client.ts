@@ -7,9 +7,21 @@ export class MCPClient {
   private client: Client | undefined;
   private config: MCPServerConfig;
   private isConnected = false;
+  private lastHealthCheck = new Date();
+  private connectionCallbacks: {
+    onDisconnect?: (serverName: string) => void;
+    onReconnect?: (serverName: string) => void;
+  } = {};
 
   constructor(config: MCPServerConfig) {
     this.config = config;
+  }
+
+  setConnectionCallbacks(callbacks: {
+    onDisconnect?: (serverName: string) => void;
+    onReconnect?: (serverName: string) => void;
+  }): void {
+    this.connectionCallbacks = callbacks;
   }
 
   async connect(): Promise<void> {
@@ -23,8 +35,14 @@ export class MCPClient {
       });
       const transport = new StreamableHTTPClientTransport(baseUrl);
       await this.client.connect(transport);
+      const wasDisconnected = !this.isConnected;
       this.isConnected = true;
+      this.lastHealthCheck = new Date();
       console.log(`✅ Connected to ${this.config.name} using Streamable HTTP transport`);
+      
+      if (wasDisconnected && this.connectionCallbacks.onReconnect) {
+        this.connectionCallbacks.onReconnect(this.config.name);
+      }
     } catch (error) {
       // If that fails, try SSE transport
       console.log(`Streamable HTTP connection failed for ${this.config.name}, falling back to SSE transport`);
@@ -34,8 +52,14 @@ export class MCPClient {
       });
       const sseTransport = new SSEClientTransport(baseUrl);
       await this.client.connect(sseTransport);
+      const wasDisconnected = !this.isConnected;
       this.isConnected = true;
+      this.lastHealthCheck = new Date();
       console.log(`✅ Connected to ${this.config.name} using SSE transport`);
+      
+      if (wasDisconnected && this.connectionCallbacks.onReconnect) {
+        this.connectionCallbacks.onReconnect(this.config.name);
+      }
     }
   }
 
@@ -43,8 +67,42 @@ export class MCPClient {
     if (this.client) {
       await this.client.close();
       this.client = undefined;
+      const wasConnected = this.isConnected;
       this.isConnected = false;
       console.log(`🔌 Disconnected from ${this.config.name}`);
+      
+      if (wasConnected && this.connectionCallbacks.onDisconnect) {
+        this.connectionCallbacks.onDisconnect(this.config.name);
+      }
+    }
+  }
+
+  private markAsDisconnected(): void {
+    if (this.isConnected) {
+      console.log(`❌ Lost connection to ${this.config.name}`);
+      this.isConnected = false;
+      this.client = undefined;
+      
+      if (this.connectionCallbacks.onDisconnect) {
+        this.connectionCallbacks.onDisconnect(this.config.name);
+      }
+    }
+  }
+
+  async checkHealth(): Promise<boolean> {
+    if (!this.client || !this.isConnected) {
+      return false;
+    }
+
+    try {
+      // Try a simple operation to test the connection
+      await this.client.listTools();
+      this.lastHealthCheck = new Date();
+      return true;
+    } catch (error) {
+      console.log(`🔍 Health check failed for ${this.config.name}:`, error);
+      this.markAsDisconnected();
+      return false;
     }
   }
 
@@ -104,14 +162,23 @@ export class MCPClient {
 
     } catch (error) {
       console.error(`Error querying ${this.config.name}:`, error);
-      if (error instanceof Error && error.message.includes('not connected')) {
-        this.isConnected = false;
-        this.client = undefined;
+      
+      // Enhanced error detection for connection issues
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      const isConnectionError = errorMessage.includes('not connected') || 
+                               errorMessage.includes('connection') || 
+                               errorMessage.includes('ECONNREFUSED') ||
+                               errorMessage.includes('ENOTFOUND') ||
+                               errorMessage.includes('timeout') ||
+                               errorMessage.includes('disconnected');
+      
+      if (isConnectionError) {
+        this.markAsDisconnected();
       }
       
       return {
         success: false,
-        error: `Query failed for ${this.config.name}: ${error instanceof Error ? error.message : String(error)}`,
+        error: `Query failed for ${this.config.name}: ${errorMessage}`,
         serverName: this.config.name
       };
     }
@@ -181,5 +248,13 @@ export class MCPClient {
 
   isServerConnected(): boolean {
     return this.isConnected;
+  }
+
+  getLastHealthCheck(): Date {
+    return this.lastHealthCheck;
+  }
+
+  async forceHealthCheck(): Promise<boolean> {
+    return await this.checkHealth();
   }
 }

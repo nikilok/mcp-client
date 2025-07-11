@@ -9,7 +9,7 @@ export interface ChatResponse {
 
 export interface MCPToolMapping {
   toolName: string;
-  parameterMapping: Record<string, string>; // Maps our standard params to tool-specific params
+  parameterMapping: Record<string, string>; 
 }
 
 export interface MCPServerConfig {
@@ -17,8 +17,8 @@ export interface MCPServerConfig {
   url: string;
   description: string;
   keywords: string[];
-  tools?: MCPToolMapping[]; // Optional: specify which tools to use and how
-  defaultTool?: string; // Optional: default tool name if multiple tools available
+  tools?: MCPToolMapping[]; 
+  defaultTool?: string; 
 }
 
 export interface MCPQueryResult {
@@ -33,5 +33,5 @@ export interface ExtractedQuery {
   companyName?: string;
   originalMessage: string;
   queryType: 'company' | 'general';
-  parameters?: Record<string, any>; // Generic parameters extracted from query
+  parameters?: Record<string, any>; 
 }

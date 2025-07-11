@@ -110,4 +110,37 @@ This project is licensed under the ISC License.
 
 ---
 
+## 🔄 **Automatic Reconnection Features**
+
+Your MCP client now includes robust automatic reconnection capabilities:
+
+### **Key Features:**
+
+1. **⚡ Automatic Detection**: Detects when MCP servers become unavailable
+2. **🔄 Smart Reconnection**: Automatically attempts to reconnect to disconnected servers
+3. **📈 Exponential Backoff**: Uses intelligent retry delays (5s → 10s → 20s → ... up to 5 minutes)
+4. **📊 Status Monitoring**: Real-time visibility into connection states and retry attempts
+5. **🚀 Non-Blocking**: Server continues to operate normally while reconnecting in background
+
+### **How It Works:**
+
+- **Monitoring**: Checks disconnected servers every 10 seconds
+- **Initial Retry**: First retry after 5 seconds
+- **Backoff Strategy**: Doubles delay after each failed attempt (max 5 minutes)
+- **Error Detection**: Automatically detects connection failures during queries
+- **Recovery**: Seamlessly resumes operations when servers come back online
+
+### **Status Endpoints:**
+
+- **GET `/health`**: Shows detailed connection status and reconnection information
+- **Real-time monitoring**: Track retry attempts and next retry timings
+
+### **Benefits:**
+
+- ✅ **Resilient**: Handles temporary network issues gracefully
+- ✅ **Self-healing**: Automatically recovers without manual intervention
+- ✅ **Performance**: Doesn't block operations while reconnecting
+- ✅ **Visibility**: Clear logging and status reporting
+- ✅ **Configurable**: Easy to adjust retry intervals and timeouts
+
 Built with ❤️ using Model Context Protocol
