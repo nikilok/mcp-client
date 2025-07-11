@@ -1,4 +1,4 @@
-import { MCPServerConfig } from "../types/index.js";
+import { MCPServerConfig } from "../types";
 
 export const MCP_SERVERS: MCPServerConfig[] = [
   {
