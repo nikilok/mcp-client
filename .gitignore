@@ -16,9 +16,11 @@ yarn-error.log*
 # TypeScript
 *.tsbuildinfo
 
+# BiomeJS
+.biome-cache/
+
 # Misc
 .idea/
-.vscode/
 *.swp
 
 # Coverage
