@@ -1,12 +1,23 @@
 {
   "name": "mcp-client",
   "version": "1.0.0",
-  "description": "",
-  "main": "server.js",
+  "description": "A modern, intelligent chat application that combines Google's Gemini AI with Model Context Protocol (MCP)",
+  "main": "dist/server.js",
+  "type": "module",
   "scripts": {
-    "start": "ts-node server.ts"
+    "start": "tsx src/server.ts",
+    "build": "tsc",
+    "start:prod": "node dist/server.js",
+    "dev": "tsx --watch src/server.ts"
   },
-  "keywords": [],
+  "keywords": [
+    "mcp",
+    "ai",
+    "chat",
+    "gemini",
+    "typescript",
+    "fastify"
+  ],
   "author": "",
   "license": "ISC",
   "dependencies": {
@@ -18,6 +29,8 @@
     "typescript": "^5.5.3"
   },
   "devDependencies": {
-    "ts-node": "^10.9.2"
+    "@types/node": "^24.0.13",
+    "ts-node": "^10.9.2",
+    "tsx": "^4.20.3"
   }
 }

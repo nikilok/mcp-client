@@ -17,20 +17,24 @@ A modern, intelligent chat application that combines the power of Google's Gemin
 ## 🚀 Quick Start
 
 1. **Clone the repository**
+
    ```bash
    git clone https://github.com/nikilok/mcp-client.git
    cd mcp-client
    ```
 
 2. **Install dependencies**
+
    ```bash
    npm install
    ```
 
 3. **Set up environment variables**
    Create a `.env` file in the root directory with:
+
    ```env
    GOOGLE_GENERATIVE_AI_API_KEY=your_google_ai_key_here
+   MCP_HMRC_SPONSORSHIP_URL=http://localhost:8000/mcp
    ```
 
 4. **Start the server**
@@ -43,6 +47,7 @@ The server will start at `http://localhost:3000`.
 ## 🔌 API Endpoints
 
 - **POST `/chat`**: Main chat endpoint for processing queries
+
   ```json
   {
     "message": "Is Company X on the sponsorship list?"
@@ -78,13 +83,15 @@ The server will start at `http://localhost:3000`.
 ## ⚙️ Configuration
 
 The application supports various configuration options through environment variables:
+
 - `GOOGLE_GENERATIVE_AI_API_KEY`: Required for AI functionality
+- `MCP_HMRC_SPONSORSHIP_URL`: URL for the HMRC MCP server (defaults to `http://localhost:8000/mcp`)
 - Server port: Defaults to 3000
-- MCP server URL: Defaults to `http://localhost:8000/mcp`
 
 ## 🤝 Contributing
 
 Feel free to contribute to this project. Here's how you can help:
+
 1. Fork the repository
 2. Create a feature branch
 3. Commit your changes
@@ -102,4 +109,5 @@ This project is licensed under the ISC License.
 - TypeScript: ^5.5.3
 
 ---
+
 Built with ❤️ using Model Context Protocol

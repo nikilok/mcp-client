@@ -27,6 +27,3 @@ coverage/
 # Others
 *.local
 *.cache
-
-# Optional: ignore compiled JS files
-*.js
