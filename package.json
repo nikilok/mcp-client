@@ -1,0 +1,23 @@
+{
+  "name": "mcp-client",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "start": "ts-node server.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@ai-sdk/google": "^0.0.26",
+    "@modelcontextprotocol/sdk": "^1.15.1",
+    "ai": "^3.2.18",
+    "dotenv": "^16.4.5",
+    "fastify": "^4.28.1",
+    "typescript": "^5.5.3"
+  },
+  "devDependencies": {
+    "ts-node": "^10.9.2"
+  }
+}
