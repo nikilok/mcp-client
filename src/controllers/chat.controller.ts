@@ -44,11 +44,13 @@ export class ChatController {
 
   async handleHealth(request: FastifyRequest, reply: FastifyReply): Promise<void> {
     const serverStatus = this.mcpManager.getServerStatus();
+    const reconnectionStatus = this.mcpManager.getReconnectionStatus();
     
     reply.send({ 
       status: 'ok', 
       timestamp: new Date().toISOString(),
-      mcpServers: serverStatus
+      mcpServers: serverStatus,
+      reconnection: reconnectionStatus
     });
   }
 }
