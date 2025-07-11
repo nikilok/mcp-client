@@ -1,23 +1,23 @@
-export interface ChatRequestBody {
+export type ChatRequestBody = {
   message: string;
-}
+};
 
 // Define more specific types for MCP data
-export interface MCPData {
+export type MCPData = {
   [key: string]: unknown;
-}
+};
 
-export interface MCPSearchResult {
+export type MCPSearchResult = {
   Organisation_Name?: string;
   Town_City?: string;
   County?: string;
   fuzzy_score?: number;
-}
+};
 
-export interface ChatResponse {
+export type ChatResponse = {
   reply: string;
   mcpData?: MCPQueryResult[];
-}
+};
 
 export interface MCPToolMapping {
   toolName: string;
@@ -33,36 +33,36 @@ export interface MCPServerConfig {
   defaultTool?: string;
 }
 
-export interface MCPQueryResult {
+export type MCPQueryResult = {
   success: boolean;
   data?: MCPSearchResult[] | MCPData;
   error?: string;
   serverName?: string;
   toolUsed?: string;
-}
+};
 
-export interface ExtractedQuery {
+export type ExtractedQuery = {
   companyName?: string;
   originalMessage: string;
   queryType: 'company' | 'general';
   parameters?: Record<string, string | number | boolean>;
-}
+};
 
 // Additional types for better type safety
-export interface MCPTool {
+export type MCPTool = {
   name: string;
   description?: string;
   inputSchema?: Record<string, unknown>;
-}
+};
 
-export interface MCPParameter {
+export type MCPParameter = {
   [key: string]: string | number | boolean | null | undefined;
-}
+};
 
-export interface ReconnectionInfo {
+export type ReconnectionInfo = {
   isReconnecting: boolean;
   attemptCount: number;
   nextRetryAt?: string;
   nextRetryIn?: number;
   lastError?: string;
-}
+};

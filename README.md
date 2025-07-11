@@ -3,16 +3,19 @@
 ![Node.js](https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)
 ![Fastify](https://img.shields.io/badge/Fastify-000000?style=for-the-badge&logo=fastify&logoColor=white)
+![MCP](https://img.shields.io/badge/MCP-Model%20Context%20Protocol-blue?style=for-the-badge)
+![BiomeJS](https://img.shields.io/badge/BiomeJS-60A5FA?style=for-the-badge&logo=biome&logoColor=white)
 
-A modern, intelligent chat application that combines the power of Google's Gemini AI with Model Context Protocol (MCP) to provide smart, context-aware responses about companies and organizations.
+A robust Model Context Protocol (MCP) client with intelligent server management capabilities. Features an MCP manager that can connect to multiple MCP servers simultaneously, with LLM integration for building sophisticated chat applications and AI-powered workflows.
 
 ## 🌟 Features
 
-- **AI-Powered Chat**: Integrates with Google's Gemini 2.0 for natural language processing
-- **Smart Company Data**: Uses MCP to fetch accurate company information
-- **Intelligent Query Processing**: Automatically extracts company names from natural language queries
-- **Real-time Communication**: Built with Fastify for high-performance request handling
-- **Fallback Transport**: Supports both HTTP streaming and SSE for robust connectivity
+- **Multi-Server MCP Client**: Connect to and manage multiple MCP servers simultaneously
+- **Intelligent Server Management**: Automatic reconnection, health monitoring, and load balancing
+- **LLM Integration**: Built-in support for Google Gemini AI for natural language processing
+- **Smart Query Routing**: Automatically routes queries to relevant MCP servers based on keywords
+- **High-Performance API**: Built with Fastify for fast, scalable request handling
+- **Robust Transport Layer**: Supports HTTP streaming and SSE with automatic fallback
 
 ## 🚀 Quick Start
 
@@ -80,35 +83,51 @@ Install the recommended BiomeJS extension for the best development experience.
 
   ```json
   {
-    "message": "Is Company X on the sponsorship list?"
+    "message": "Your query here - the system will route it to appropriate MCP servers"
   }
   ```
 
-- **GET `/health`**: Health check endpoint
+- **GET `/health`**: Health check endpoint with MCP server status
   ```json
   {
     "status": "ok",
     "timestamp": "2025-07-11T10:00:00.000Z",
-    "mcpConnected": true
+    "servers": [
+      {
+        "name": "server1",
+        "connected": true,
+        "url": "http://localhost:8000/mcp"
+      }
+    ]
   }
   ```
 
 ## 🛠 Technology Stack
 
-- **Runtime**: Node.js
+- **Runtime**: Bun (JavaScript runtime)
 - **Language**: TypeScript
-- **Framework**: Fastify
-- **AI Integration**: Google Gemini 2.0
+- **Framework**: Fastify (Web server)
 - **Protocol**: Model Context Protocol (MCP)
-- **Transport**: Streamable HTTP / Server-Sent Events (SSE)
+- **AI Integration**: Google Gemini 1.5-flash
+- **Transport**: HTTP Streaming / Server-Sent Events (SSE)
+- **Code Quality**: BiomeJS (Linting & Formatting)
 
 ## 💡 How It Works
 
-1. User sends a query about a company
-2. Gemini AI extracts the company name from the natural language query
-3. MCP client fetches relevant company data
-4. Gemini AI generates a human-friendly response incorporating the data
-5. Response is sent back to the user
+1. **Query Processing**: Receives user queries through the REST API
+2. **LLM Analysis**: Uses Gemini AI to analyze and extract relevant information from queries
+3. **Server Selection**: Intelligently routes queries to appropriate MCP servers based on keywords and context
+4. **Multi-Server Coordination**: Executes queries across multiple MCP servers simultaneously
+5. **Response Generation**: Combines MCP server responses with LLM processing for intelligent, context-aware replies
+6. **Health Management**: Continuously monitors server health and automatically handles reconnections
+
+## 🏗️ Architecture
+
+- **MCP Manager**: Central orchestrator for managing multiple MCP server connections
+- **MCP Client**: Individual client instances for each MCP server with automatic reconnection
+- **LLM Service**: Integrated AI service for query processing and response generation
+- **REST API**: High-performance Fastify server for handling client requests
+- **Transport Layer**: Flexible transport with HTTP/SSE fallback mechanisms
 
 ## ⚙️ Configuration
 
