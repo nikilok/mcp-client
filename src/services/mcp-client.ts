@@ -49,6 +49,10 @@ export class MCPClient {
   }
 
   async queryCompany(companyName: string): Promise<MCPQueryResult> {
+    return this.executeQuery({ company_name: companyName });
+  }
+
+  async executeQuery(parameters: Record<string, any>): Promise<MCPQueryResult> {
     if (!this.isConnected || !this.client) {
       try {
         await this.connect();
@@ -62,39 +66,40 @@ export class MCPClient {
     }
 
     try {
-      console.log(`🔍 Querying ${this.config.name} for company: "${companyName}"`);
+      console.log(`🔍 Querying ${this.config.name} with parameters:`, parameters);
       
       // List available tools
       const tools = await this.client!.listTools();
-      
-      // Find the appropriate tool for company search
-      const searchTool = tools.tools.find(tool => 
-        tool.name.toLowerCase().includes('search') || 
-        tool.name.toLowerCase().includes('company') ||
-        (tool.description && tool.description.toLowerCase().includes('company'))
-      );
+      console.log(`📋 Available tools for ${this.config.name}:`, tools.tools.map(t => t.name));
 
-      if (!searchTool) {
+      // Select tool to use
+      const toolToUse = this.selectTool(tools.tools);
+      
+      if (!toolToUse) {
         return {
           success: false,
-          error: `No suitable company search tool found in ${this.config.name}`,
+          error: `No suitable tools found in ${this.config.name}. Available tools: ${tools.tools.map(t => t.name).join(', ')}`,
           serverName: this.config.name
         };
       }
 
+      // Map parameters if needed
+      const mappedParameters = this.mapParameters(toolToUse.name, parameters);
+
+      console.log(`🔧 Using tool "${toolToUse.name}" with parameters:`, mappedParameters);
+
       const response = await this.client!.callTool({
-        name: searchTool.name,
-        arguments: {
-          company_name: companyName
-        }
+        name: toolToUse.name,
+        arguments: mappedParameters
       });
 
-      console.log(`📥 Response from ${this.config.name}:`, response);
+    //   console.log(`📥 Response from ${this.config.name}:`, response);
       
       return {
         success: true,
         data: response,
-        serverName: this.config.name
+        serverName: this.config.name,
+        toolUsed: toolToUse.name
       };
 
     } catch (error) {
@@ -110,6 +115,64 @@ export class MCPClient {
         serverName: this.config.name
       };
     }
+  }
+
+  private selectTool(availableTools: any[]): any | null {
+    if (availableTools.length === 0) {
+      return null;
+    }
+
+    // If server config specifies which tools to use, prefer those
+    if (this.config.tools && this.config.tools.length > 0) {
+      for (const configTool of this.config.tools) {
+        const tool = availableTools.find(t => t.name === configTool.toolName);
+        if (tool) {
+          console.log(`🎯 Using configured tool: ${tool.name}`);
+          return tool;
+        }
+      }
+    }
+
+    // If a default tool is specified, try to use it
+    if (this.config.defaultTool) {
+      const defaultTool = availableTools.find(t => t.name === this.config.defaultTool);
+      if (defaultTool) {
+        console.log(`🔧 Using default tool: ${defaultTool.name}`);
+        return defaultTool;
+      }
+    }
+
+    // Fallback: use the first available tool
+    console.log(`⚡ Using first available tool: ${availableTools[0].name}`);
+    return availableTools[0];
+  }
+
+  private mapParameters(toolName: string, parameters: Record<string, any>): Record<string, any> {
+    // Check if we have specific parameter mapping for this tool
+    if (this.config.tools) {
+      const toolConfig = this.config.tools.find(t => t.toolName === toolName);
+      if (toolConfig && toolConfig.parameterMapping) {
+        const mappedParams: Record<string, any> = {};
+        
+        for (const [standardParam, toolParam] of Object.entries(toolConfig.parameterMapping)) {
+          if (parameters[standardParam] !== undefined) {
+            mappedParams[toolParam] = parameters[standardParam];
+          }
+        }
+        
+        // Include any parameters that don't need mapping
+        for (const [key, value] of Object.entries(parameters)) {
+          if (!Object.keys(toolConfig.parameterMapping).includes(key)) {
+            mappedParams[key] = value;
+          }
+        }
+        
+        return mappedParams;
+      }
+    }
+
+    // No mapping needed, return parameters as-is
+    return parameters;
   }
 
   getConfig(): MCPServerConfig {
