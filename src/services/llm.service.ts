@@ -1,7 +1,7 @@
 import { google } from "@ai-sdk/google";
 
 export class LLMService {
-  private model = google("models/gemini-2.0-flash-exp");
+  private model = google(process.env.GEMINI_MODEL || "models/gemini-1.5-flash");
 
   async extractCompanyName(message: string): Promise<string | null> {
     try {
