@@ -1,7 +1,7 @@
 {
   "name": "mcp-client",
   "version": "1.0.0",
-  "description": "A modern, intelligent chat application that combines Google's Gemini AI with Model Context Protocol (MCP)",
+  "description": "A fastify server with MCP server integration",
   "main": "dist/server.js",
   "type": "module",
   "scripts": {

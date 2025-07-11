@@ -26,7 +26,7 @@ A modern, intelligent chat application that combines the power of Google's Gemin
 2. **Install dependencies**
 
    ```bash
-   npm install
+   bun install
    ```
 
 3. **Set up environment variables**
@@ -39,7 +39,7 @@ A modern, intelligent chat application that combines the power of Google's Gemin
 
 4. **Start the server**
    ```bash
-   npm start
+   bun start
    ```
 
 The server will start at `http://localhost:3000`.

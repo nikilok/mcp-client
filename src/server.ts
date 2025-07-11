@@ -1,9 +1,9 @@
 import Fastify from 'fastify';
 import dotenv from 'dotenv';
-import { MCPManager } from './services/mcp-manager.js';
-import { ChatController } from './controllers/chat.controller.js';
-import { MCP_SERVERS } from './config/mcp-servers.js';
-import { ChatRequestBody } from './types/index.js';
+import { MCPManager } from './services/mcp-manager';
+import { ChatController } from './controllers/chat.controller';
+import { MCP_SERVERS } from './config/mcp-servers';
+import { ChatRequestBody } from './types';
 
 dotenv.config();
 
