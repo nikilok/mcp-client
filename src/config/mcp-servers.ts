@@ -1,4 +1,4 @@
-import { MCPServerConfig } from "../types";
+import type { MCPServerConfig } from '../types';
 
 export const MCP_SERVERS: MCPServerConfig[] = [
   {
@@ -10,18 +10,16 @@ export const MCP_SERVERS: MCPServerConfig[] = [
       {
         toolName: 'mcp_python-hmrc-s_search_company_search_get',
         parameterMapping: {
-          'company_name': 'company_name' 
-        }
-      }
-    ]
+          company_name: 'company_name',
+        },
+      },
+    ],
   },
 ];
 
 export function isMCPQuery(message: string): boolean {
   // Check if message contains any keywords from any configured server
-  return MCP_SERVERS.some(server =>
-    server.keywords.some(keyword =>
-      message.toLowerCase().includes(keyword.toLowerCase())
-    )
+  return MCP_SERVERS.some((server) =>
+    server.keywords.some((keyword) => message.toLowerCase().includes(keyword.toLowerCase()))
   );
 }

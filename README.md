@@ -44,6 +44,36 @@ A modern, intelligent chat application that combines the power of Google's Gemin
 
 The server will start at `http://localhost:3000`.
 
+## 🧹 Code Quality & Formatting
+
+This project uses **BiomeJS** for fast linting and code formatting. BiomeJS is a high-performance toolchain written in Rust that provides linting, formatting, and import organization.
+
+### Available Scripts
+
+- **`bun run lint`** - Run linting checks only
+- **`bun run lint:fix`** - Run linting with automatic fixes
+- **`bun run format`** - Check code formatting
+- **`bun run format:fix`** - Auto-format all files
+- **`bun run check`** - Run both linting and formatting checks
+- **`bun run check:fix`** - Auto-fix both linting and formatting issues
+- **`bun run precommit`** - Check only staged files (useful for git hooks)
+
+### IDE Integration
+
+The project includes VS Code settings for:
+
+- ✅ **Format on Save**: Automatically formats code when saving
+- ✅ **Auto-organize Imports**: Sorts and removes unused imports
+- ✅ **Real-time Linting**: Shows errors and warnings as you type
+
+Install the recommended BiomeJS extension for the best development experience.
+
+### Configuration
+
+- **`biome.json`**: Main configuration file with custom rules
+- **`.vscode/settings.json`**: IDE integration settings
+- **Formatting**: 2-space indentation, single quotes, semicolons
+
 ## 🔌 API Endpoints
 
 - **POST `/chat`**: Main chat endpoint for processing queries
