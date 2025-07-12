@@ -1,6 +1,6 @@
 {
   "name": "@mcp-client/manager",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "A robust Model Context Protocol (MCP) client manager for connecting to multiple MCP servers",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
