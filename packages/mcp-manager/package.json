@@ -6,7 +6,7 @@
   "types": "dist/index.d.ts",
   "type": "module",
   "scripts": {
-    "build": "tsc && bun run --cwd=../.. ts-add-js-extension --dir=packages/mcp-manager/dist",
+    "build": "tsc && npx ts-add-js-extension --dir=dist",
     "dev": "tsc --watch",
     "lint": "biome lint .",
     "lint:fix": "biome lint . --write",
