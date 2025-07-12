@@ -1,7 +1,5 @@
 # MCP Client
 
-npx
-
 <div align="center">
   <img src="logo.png" alt="MCP Client Logo" width="200" height="200">
 </div>
