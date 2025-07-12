@@ -10,7 +10,7 @@
   ],
   "scripts": {
     "start": "tsx src/server.ts",
-    "build": "tsc && bun run build:packages",
+    "build": "tsc && ts-add-js-extension --dir=dist && bun run build:packages",
     "build:packages": "bun run --filter=@mcp-client/manager build",
     "start:prod": "node dist/server.js",
     "dev": "tsx --watch src/server.ts",
@@ -46,6 +46,7 @@
     "@biomejs/biome": "^2.1.1",
     "@types/node": "^24.0.13",
     "concurrently": "^9.2.0",
+    "ts-add-js-extension": "^1.6.6",
     "ts-node": "^10.9.2",
     "tsx": "^4.20.3"
   }
