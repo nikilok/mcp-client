@@ -1,5 +1,7 @@
 # MCP Client
 
+npx
+
 <div align="center">
   <img src="logo.png" alt="MCP Client Logo" width="200" height="200">
 </div>
@@ -64,7 +66,6 @@ This project uses **BiomeJS** for fast linting and code formatting. BiomeJS is a
 - **`bun run format:fix`** - Auto-format all files
 - **`bun run check`** - Run both linting and formatting checks
 - **`bun run check:fix`** - Auto-fix both linting and formatting issues
-- **`bun run precommit`** - Check only staged files (useful for git hooks)
 
 ### IDE Integration
 
