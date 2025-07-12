@@ -1,5 +1,5 @@
 import type { FastifyReply, FastifyRequest } from 'fastify';
-import { isMCPQuery } from '../config/mcp-servers.js';
+import { isMCPQuery } from '../config/mcp-servers';
 import type { MCPService } from '../services/mcp.service';
 import type { ChatRequestBody, ChatResponse, MCPQueryResult } from '../types';
 
