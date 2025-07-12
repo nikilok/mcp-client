@@ -6,7 +6,7 @@
   "types": "dist/index.d.ts",
   "type": "module",
   "scripts": {
-    "build": "tsc && npx ts-add-js-extension --dir=dist",
+    "build": "tsc && ts-add-js-extension --dir=dist",
     "dev": "tsc --watch",
     "lint": "biome lint .",
     "lint:fix": "biome lint . --write",
@@ -31,6 +31,7 @@
   "devDependencies": {
     "@biomejs/biome": "^2.1.1",
     "@types/node": "^24.0.13",
+    "ts-add-js-extension": "^1.6.6",
     "typescript": "^5.5.3"
   },
   "files": [
