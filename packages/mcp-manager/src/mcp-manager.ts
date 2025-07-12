@@ -331,7 +331,7 @@ export class MCPManager {
       // Success! Remove from disconnected list
       this.disconnectedServers.delete(serverName);
       this.debug.log(`✅ Successfully reconnected to ${serverName}`);
-    } catch (_error) {
+    } catch (error) {
       // Update reconnection state with exponential backoff
       const newAttemptCount = state.attemptCount + 1;
       const newDelay = Math.min(
@@ -346,9 +346,10 @@ export class MCPManager {
         nextRetryDelay: newDelay,
       });
 
-      this.debug.log(
-        `❌ Failed to reconnect to ${serverName} (attempt ${newAttemptCount}). Next attempt in ${newDelay / 1000}s`
-      );
+      this.debug.log(`❌ Failed to reconnect to: ${serverName}`);
+      this.debug.log(`   └─ Attempt: ${newAttemptCount}`);
+      this.debug.log(`   └─ Next retry: ${newDelay / 1000}s`);
+      this.debug.log(`   └─ Error: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 

@@ -1,7 +1,7 @@
 # MCP Client
 
 ![Node.js](https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)
-![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)
+![Bun](https://img.shields.io/badge/Bun-000000?style=for-the-badge&logo=bun&logoColor=white)
 ![Fastify](https://img.shields.io/badge/Fastify-000000?style=for-the-badge&logo=fastify&logoColor=white)
 ![MCP](https://img.shields.io/badge/MCP-Model%20Context%20Protocol-blue?style=for-the-badge)
 ![BiomeJS](https://img.shields.io/badge/BiomeJS-60A5FA?style=for-the-badge&logo=biome&logoColor=white)
@@ -137,7 +137,8 @@ The application supports various configuration options through environment varia
 - `GOOGLE_GENERATIVE_AI_API_KEY`: Required for AI functionality
 - `MCP_HMRC_SPONSORSHIP_URL`: URL for the HMRC MCP server (defaults to `http://localhost:8000/mcp`)
 - `MCP_DEBUG`: Set to `true` to enable debug logging for MCP operations (defaults to `false`)
-- Server port: Defaults to 3000
+- `PORT`: Server port (defaults to `3000`)
+- `HOST`: Server host/interface to bind to (defaults to `0.0.0.0` for cloud compatibility)
 
 ## 🤝 Contributing
 
