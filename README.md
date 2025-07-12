@@ -1,5 +1,9 @@
 # MCP Client
 
+<div align="center">
+  <img src="logo.png" alt="MCP Client Logo" width="200" height="200">
+</div>
+
 ![Node.js](https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)
 ![Bun](https://img.shields.io/badge/Bun-000000?style=for-the-badge&logo=bun&logoColor=white)
 ![Fastify](https://img.shields.io/badge/Fastify-000000?style=for-the-badge&logo=fastify&logoColor=white)
