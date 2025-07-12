@@ -50,16 +50,6 @@ export class MCPService {
       ];
     }
 
-    if (!extractedQuery.companyName) {
-      return [
-        {
-          success: false,
-          error: 'No company name found in query',
-          serverName: 'system',
-        },
-      ];
-    }
-
     const queryParameters = {
       company_name: extractedQuery.companyName,
       ...extractedQuery.parameters,
