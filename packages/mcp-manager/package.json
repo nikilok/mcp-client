@@ -1,0 +1,40 @@
+{
+  "name": "@mcp-client/manager",
+  "version": "1.0.0",
+  "description": "A robust Model Context Protocol (MCP) client manager for connecting to multiple MCP servers",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "lint": "biome lint .",
+    "lint:fix": "biome lint . --write",
+    "format": "biome format .",
+    "format:fix": "biome format . --write",
+    "check": "biome check .",
+    "check:fix": "biome check . --write"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "ai",
+    "typescript",
+    "client",
+    "manager"
+  ],
+  "author": "nikilok",
+  "license": "ISC",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.15.1"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.1.1",
+    "@types/node": "^24.0.13",
+    "typescript": "^5.5.3"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ]
+}

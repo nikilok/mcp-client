@@ -1,49 +1,69 @@
-import type { ExtractedQuery, MCPQueryResult, MCPServerConfig, ReconnectionInfo } from '../types';
-import { LLMService } from './llm.service';
 import { MCPClient } from './mcp-client';
-
-type ReconnectionState = {
-  serverName: string;
-  lastAttempt: Date;
-  attemptCount: number;
-  nextRetryDelay: number;
-};
+import type {
+  ConnectionStats,
+  MCPManagerConfig,
+  MCPQueryResult,
+  MCPServerConfig,
+  ReconnectionInfo,
+  ReconnectionState,
+  ServerStatus,
+} from './types';
+import { DebugLogger } from './utils/debug';
 
 export class MCPManager {
   private clients: Map<string, MCPClient> = new Map();
-  private llmService: LLMService;
   private disconnectedServers: Map<string, ReconnectionState> = new Map();
   private reconnectionTimer: NodeJS.Timeout | null = null;
-  private readonly INITIAL_RETRY_DELAY = 5000; // 5 seconds
-  private readonly MAX_RETRY_DELAY = 300000; // 5 minutes
-  private readonly RECONNECTION_CHECK_INTERVAL = 10000; // Check every 10 seconds
-  private readonly HEALTH_CHECK_INTERVAL = 30000; // Health check every 30 seconds
-  private isShuttingDown = false;
   private healthCheckTimer: NodeJS.Timeout | null = null;
+  private isShuttingDown = false;
+  private debug: DebugLogger;
 
-  constructor() {
-    this.llmService = new LLMService();
+  // Configuration with defaults
+  private readonly INITIAL_RETRY_DELAY: number;
+  private readonly MAX_RETRY_DELAY: number;
+  private readonly RECONNECTION_CHECK_INTERVAL = 10000; // Check every 10 seconds
+  private readonly HEALTH_CHECK_INTERVAL: number;
+  private readonly HEALTH_CHECK_ENABLED: boolean;
+
+  constructor(config?: MCPManagerConfig) {
+    this.debug = new DebugLogger(config?.enableDebugging ?? false);
+
+    // Apply configuration with defaults
+    this.INITIAL_RETRY_DELAY = config?.reconnection?.initialRetryDelay ?? 5000; // 5 seconds
+    this.MAX_RETRY_DELAY = config?.reconnection?.maxRetryDelay ?? 300000; // 5 minutes
+    this.HEALTH_CHECK_INTERVAL = config?.healthCheck?.interval ?? 30000; // 30 seconds
+    this.HEALTH_CHECK_ENABLED = config?.healthCheck?.enabled ?? true;
+
+    // Auto-configure servers if provided
+    if (config?.servers) {
+      for (const serverConfig of config.servers) {
+        this.addServer(serverConfig);
+      }
+    }
+
     this.startReconnectionMonitor();
-    this.startHealthMonitor();
+    if (this.HEALTH_CHECK_ENABLED) {
+      this.startHealthMonitor();
+    }
   }
 
   addServer(config: MCPServerConfig): void {
-    const client = new MCPClient(config);
+    const client = new MCPClient(config, this.debug);
 
     // Set up connection event callbacks
     client.setConnectionCallbacks({
       onDisconnect: (serverName: string) => {
-        console.log(`🔴 Server ${serverName} disconnected - adding to reconnection queue`);
+        this.debug.log(`🔴 Server ${serverName} disconnected - adding to reconnection queue`);
         this.markServerAsDisconnected(serverName);
       },
       onReconnect: (serverName: string) => {
-        console.log(`🟢 Server ${serverName} reconnected - removing from reconnection queue`);
+        this.debug.log(`🟢 Server ${serverName} reconnected - removing from reconnection queue`);
         this.disconnectedServers.delete(serverName);
       },
     });
 
     this.clients.set(config.name, client);
-    console.log(`📝 Added MCP server: ${config.name} (${config.url})`);
+    this.debug.log(`📝 Added MCP server: ${config.name} (${config.url})`);
   }
 
   async initializeAllServers(): Promise<void> {
@@ -53,7 +73,7 @@ export class MCPManager {
         // Remove from disconnected list if reconnection was successful
         this.disconnectedServers.delete(client.getConfig().name);
       } catch (error) {
-        console.warn(`⚠️ Failed to initialize ${client.getConfig().name}:`, error);
+        this.debug.warn(`⚠️ Failed to initialize ${client.getConfig().name}:`, error);
         this.markServerAsDisconnected(client.getConfig().name);
       }
     });
@@ -73,23 +93,15 @@ export class MCPManager {
     await Promise.allSettled(disconnectionPromises);
   }
 
-  private async extractQueryInfo(message: string): Promise<ExtractedQuery> {
-    const companyName = await this.llmService.extractCompanyName(message);
-
-    return {
-      companyName: companyName || undefined,
-      originalMessage: message,
-      queryType: companyName ? 'company' : 'general',
-    };
-  }
-
-  private determineRelevantServers(message: string): MCPClient[] {
+  private determineRelevantServers(keywords: string[]): MCPClient[] {
     const relevantClients: MCPClient[] = [];
 
     for (const client of this.clients.values()) {
       const config = client.getConfig();
-      const hasRelevantKeyword = config.keywords.some((keyword) =>
-        message.toLowerCase().includes(keyword.toLowerCase())
+      const hasRelevantKeyword = keywords.some((keyword) =>
+        config.keywords.some((configKeyword) =>
+          configKeyword.toLowerCase().includes(keyword.toLowerCase())
+        )
       );
 
       if (hasRelevantKeyword) {
@@ -105,20 +117,11 @@ export class MCPManager {
     return relevantClients;
   }
 
-  async queryServers(message: string): Promise<MCPQueryResult[]> {
-    const extractedQuery = await this.extractQueryInfo(message);
-
-    if (extractedQuery.queryType === 'general') {
-      return [
-        {
-          success: false,
-          error: 'Could not extract a company name from the message.',
-          serverName: 'query-processor',
-        },
-      ];
-    }
-
-    const relevantServers = this.determineRelevantServers(message);
+  async queryServers(
+    parameters: Record<string, unknown>,
+    keywords: string[] = []
+  ): Promise<MCPQueryResult[]> {
+    const relevantServers = this.determineRelevantServers(keywords);
 
     if (relevantServers.length === 0) {
       return [
@@ -130,28 +133,11 @@ export class MCPManager {
       ];
     }
 
-    console.log(
-      `🎯 Querying ${relevantServers.length} relevant server(s) for: "${extractedQuery.companyName}"`
-    );
-
-    if (!extractedQuery.companyName) {
-      return [
-        {
-          success: false,
-          error: 'No company name found in query',
-          serverName: 'system',
-        },
-      ];
-    }
-
-    const queryParameters = {
-      company_name: extractedQuery.companyName,
-      ...extractedQuery.parameters,
-    };
+    this.debug.log(`🎯 Querying ${relevantServers.length} relevant server(s)`);
 
     const queryPromises = relevantServers.map(async (client) => {
       try {
-        return await client.executeQuery(queryParameters);
+        return await client.executeQuery(parameters);
       } catch (error) {
         // Mark server as disconnected if query fails due to connection issues
         const errorMessage = error instanceof Error ? error.message : String(error);
@@ -204,8 +190,7 @@ export class MCPManager {
     };
 
     // Create a new client instance with the temporary config
-    const ClientConstructor = client.constructor as new (config: MCPServerConfig) => MCPClient;
-    const tempClient = new ClientConstructor(tempConfig);
+    const tempClient = new MCPClient(tempConfig, this.debug);
     await tempClient.connect();
 
     try {
@@ -224,7 +209,7 @@ export class MCPManager {
           const tools = await client.listAvailableTools();
           toolsPerServer[serverName] = tools.map((t) => t.name) || [];
         } catch (error) {
-          console.warn(`Failed to list tools for ${serverName}:`, error);
+          this.debug.warn(`Failed to list tools for ${serverName}:`, error);
           toolsPerServer[serverName] = [];
         }
       } else {
@@ -235,16 +220,7 @@ export class MCPManager {
     return toolsPerServer;
   }
 
-  getServerStatus(): Array<{
-    name: string;
-    connected: boolean;
-    url: string;
-    reconnectionInfo?: {
-      isReconnecting: boolean;
-      attemptCount: number;
-      nextRetryIn?: number;
-    };
-  }> {
+  getServerStatus(): ServerStatus[] {
     return Array.from(this.clients.values()).map((client) => {
       const config = client.getConfig();
       const isConnected = client.isServerConnected();
@@ -272,12 +248,7 @@ export class MCPManager {
     });
   }
 
-  getReconnectionStatus(): {
-    totalServers: number;
-    connectedServers: number;
-    disconnectedServers: number;
-    reconnectionActive: boolean;
-  } {
+  getConnectionStats(): ConnectionStats {
     const totalServers = this.clients.size;
     const connectedServers = Array.from(this.clients.values()).filter((client) =>
       client.isServerConnected()
@@ -293,13 +264,6 @@ export class MCPManager {
     };
   }
 
-  async generateResponse(message: string, mcpResults: MCPQueryResult[]): Promise<string> {
-    const successfulResults = mcpResults.filter((result) => result.success);
-    const combinedData = successfulResults.length > 0 ? successfulResults : undefined;
-
-    return this.llmService.generateResponse(message, combinedData);
-  }
-
   private startReconnectionMonitor(): void {
     if (this.reconnectionTimer) {
       clearInterval(this.reconnectionTimer);
@@ -311,7 +275,7 @@ export class MCPManager {
       }
     }, this.RECONNECTION_CHECK_INTERVAL);
 
-    console.log(
+    this.debug.log(
       `🔄 Started reconnection monitor (checking every ${this.RECONNECTION_CHECK_INTERVAL / 1000}s)`
     );
   }
@@ -320,7 +284,7 @@ export class MCPManager {
     if (this.reconnectionTimer) {
       clearInterval(this.reconnectionTimer);
       this.reconnectionTimer = null;
-      console.log(`⏹️ Stopped reconnection monitor`);
+      this.debug.log(`⏹️ Stopped reconnection monitor`);
     }
   }
 
@@ -341,7 +305,7 @@ export class MCPManager {
     }
 
     if (reconnectionPromises.length > 0) {
-      console.log(`🔄 Attempting to reconnect ${reconnectionPromises.length} server(s)...`);
+      this.debug.log(`🔄 Attempting to reconnect ${reconnectionPromises.length} server(s)...`);
       await Promise.allSettled(reconnectionPromises);
     }
   }
@@ -357,7 +321,7 @@ export class MCPManager {
     }
 
     try {
-      console.log(
+      this.debug.log(
         `🔌 Attempting to reconnect to ${serverName} (attempt ${state.attemptCount + 1})`
       );
 
@@ -365,7 +329,7 @@ export class MCPManager {
 
       // Success! Remove from disconnected list
       this.disconnectedServers.delete(serverName);
-      console.log(`✅ Successfully reconnected to ${serverName}`);
+      this.debug.log(`✅ Successfully reconnected to ${serverName}`);
     } catch (_error) {
       // Update reconnection state with exponential backoff
       const newAttemptCount = state.attemptCount + 1;
@@ -381,7 +345,7 @@ export class MCPManager {
         nextRetryDelay: newDelay,
       });
 
-      console.log(
+      this.debug.log(
         `❌ Failed to reconnect to ${serverName} (attempt ${newAttemptCount}). Next attempt in ${newDelay / 1000}s`
       );
     }
@@ -397,7 +361,7 @@ export class MCPManager {
       };
 
       this.disconnectedServers.set(serverName, state);
-      console.log(`📋 Marked ${serverName} as disconnected. Will attempt reconnection.`);
+      this.debug.log(`📋 Marked ${serverName} as disconnected. Will attempt reconnection.`);
     }
   }
 
@@ -412,14 +376,16 @@ export class MCPManager {
       }
     }, this.HEALTH_CHECK_INTERVAL);
 
-    console.log(`💓 Started health monitor (checking every ${this.HEALTH_CHECK_INTERVAL / 1000}s)`);
+    this.debug.log(
+      `💓 Started health monitor (checking every ${this.HEALTH_CHECK_INTERVAL / 1000}s)`
+    );
   }
 
   private stopHealthMonitor(): void {
     if (this.healthCheckTimer) {
       clearInterval(this.healthCheckTimer);
       this.healthCheckTimer = null;
-      console.log(`⏹️ Stopped health monitor`);
+      this.debug.log(`⏹️ Stopped health monitor`);
     }
   }
 
@@ -432,16 +398,18 @@ export class MCPManager {
       return;
     }
 
-    console.log(`💓 Performing health checks on ${connectedClients.length} connected server(s)...`);
+    this.debug.log(
+      `💓 Performing health checks on ${connectedClients.length} connected server(s)...`
+    );
 
     const healthCheckPromises = connectedClients.map(async (client) => {
       try {
         const isHealthy = await client.forceHealthCheck();
         if (!isHealthy) {
-          console.log(`❌ Health check failed for ${client.getConfig().name}`);
+          this.debug.log(`❌ Health check failed for ${client.getConfig().name}`);
         }
       } catch (error) {
-        console.log(`❌ Health check error for ${client.getConfig().name}:`, error);
+        this.debug.log(`❌ Health check error for ${client.getConfig().name}:`, error);
       }
     });
 

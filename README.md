@@ -38,6 +38,7 @@ A robust Model Context Protocol (MCP) client with intelligent server management 
    ```env
    GOOGLE_GENERATIVE_AI_API_KEY=your_google_ai_key_here
    MCP_HMRC_SPONSORSHIP_URL=http://localhost:8000/mcp
+   MCP_DEBUG=false
    ```
 
 4. **Start the server**
@@ -135,6 +136,7 @@ The application supports various configuration options through environment varia
 
 - `GOOGLE_GENERATIVE_AI_API_KEY`: Required for AI functionality
 - `MCP_HMRC_SPONSORSHIP_URL`: URL for the HMRC MCP server (defaults to `http://localhost:8000/mcp`)
+- `MCP_DEBUG`: Set to `true` to enable debug logging for MCP operations (defaults to `false`)
 - Server port: Defaults to 3000
 
 ## 🤝 Contributing

@@ -2,19 +2,14 @@ import dotenv from 'dotenv';
 import Fastify from 'fastify';
 import { MCP_SERVERS } from './config/mcp-servers';
 import { ChatController } from './controllers/chat.controller';
-import { MCPManager } from './services/mcp-manager';
+import { MCPService } from './services/mcp.service';
 import type { ChatRequestBody } from './types';
 
 dotenv.config();
 
 const fastify = Fastify({ logger: true });
-const mcpManager = new MCPManager();
-const chatController = new ChatController(mcpManager);
-
-// Register MCP servers
-MCP_SERVERS.forEach((serverConfig) => {
-  mcpManager.addServer(serverConfig);
-});
+const mcpService = new MCPService(MCP_SERVERS, process.env.MCP_DEBUG === 'true');
+const chatController = new ChatController(mcpService);
 
 // Routes
 fastify.post<{ Body: ChatRequestBody }>('/chat', async (request, reply) => {
@@ -28,14 +23,14 @@ fastify.get('/health', async (request, reply) => {
 // Graceful shutdown
 process.on('SIGTERM', async () => {
   console.log('🛑 Received SIGTERM, shutting down gracefully...');
-  await mcpManager.disconnectAllServers();
+  await mcpService.shutdown();
   await fastify.close();
   process.exit(0);
 });
 
 process.on('SIGINT', async () => {
   console.log('🛑 Received SIGINT, shutting down gracefully...');
-  await mcpManager.disconnectAllServers();
+  await mcpService.shutdown();
   await fastify.close();
   process.exit(0);
 });
@@ -60,10 +55,10 @@ const start = async () => {
     // Initialize MCP servers after server is started
     console.log('🔄 Initializing MCP connections...');
     try {
-      await mcpManager.initializeAllServers();
+      await mcpService.initialize();
       console.log('✅ MCP servers initialized');
 
-      const serverStatus = mcpManager.getServerStatus();
+      const serverStatus = mcpService.getServerStatus();
       serverStatus.forEach((server) => {
         console.log(`📡 ${server.name}: ${server.connected ? '✅ Connected' : '❌ Disconnected'}`);
       });

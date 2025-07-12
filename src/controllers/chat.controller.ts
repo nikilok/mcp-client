@@ -1,13 +1,13 @@
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { isMCPQuery } from '../config/mcp-servers.js';
-import type { MCPManager } from '../services/mcp-manager.js';
+import type { MCPService } from '../services/mcp.service';
 import type { ChatRequestBody, ChatResponse, MCPQueryResult } from '../types';
 
 export class ChatController {
-  private mcpManager: MCPManager;
+  private mcpService: MCPService;
 
-  constructor(mcpManager: MCPManager) {
-    this.mcpManager = mcpManager;
+  constructor(mcpService: MCPService) {
+    this.mcpService = mcpService;
   }
 
   async handleChat(
@@ -26,11 +26,11 @@ export class ChatController {
 
       if (isMCPQuery(message)) {
         console.log('🧠 This seems like an MCP query, fetching data...');
-        mcpResults = await this.mcpManager.queryServers(message);
+        mcpResults = await this.mcpService.processQuery(message);
         console.log('📊 MCP Results received:', mcpResults);
       }
 
-      const response = await this.mcpManager.generateResponse(message, mcpResults);
+      const response = await this.mcpService.generateResponse(message, mcpResults);
 
       const chatResponse: ChatResponse = {
         reply: response,
@@ -45,14 +45,14 @@ export class ChatController {
   }
 
   async handleHealth(_request: FastifyRequest, reply: FastifyReply): Promise<void> {
-    const serverStatus = this.mcpManager.getServerStatus();
-    const reconnectionStatus = this.mcpManager.getReconnectionStatus();
+    const serverStatus = this.mcpService.getServerStatus();
+    const connectionStats = this.mcpService.getConnectionStats();
 
     reply.send({
       status: 'ok',
       timestamp: new Date().toISOString(),
       mcpServers: serverStatus,
-      reconnection: reconnectionStatus,
+      connectionStats: connectionStats,
     });
   }
 }

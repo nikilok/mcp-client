@@ -1,20 +1,23 @@
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { SSEClientTransport } from '@modelcontextprotocol/sdk/client/sse.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
-import type { MCPQueryResult, MCPServerConfig, MCPTool } from '../types';
+import type { MCPQueryResult, MCPServerConfig, MCPTool } from './types';
+import type { DebugLogger } from './utils/debug';
 
 export class MCPClient {
   private client: Client | undefined;
   private config: MCPServerConfig;
   private isConnected = false;
   private lastHealthCheck = new Date();
+  private debug: DebugLogger | undefined;
   private connectionCallbacks: {
     onDisconnect?: (serverName: string) => void;
     onReconnect?: (serverName: string) => void;
   } = {};
 
-  constructor(config: MCPServerConfig) {
+  constructor(config: MCPServerConfig, debug?: DebugLogger) {
     this.config = config;
+    this.debug = debug;
   }
 
   setConnectionCallbacks(callbacks: {
@@ -38,14 +41,14 @@ export class MCPClient {
       const wasDisconnected = !this.isConnected;
       this.isConnected = true;
       this.lastHealthCheck = new Date();
-      console.log(`✅ Connected to ${this.config.name} using Streamable HTTP transport`);
+      this.debug?.log(`✅ Connected to ${this.config.name} using Streamable HTTP transport`);
 
       if (wasDisconnected && this.connectionCallbacks.onReconnect) {
         this.connectionCallbacks.onReconnect(this.config.name);
       }
     } catch (_error) {
       // If that fails, try SSE transport
-      console.log(
+      this.debug?.log(
         `Streamable HTTP connection failed for ${this.config.name}, falling back to SSE transport`
       );
       this.client = new Client({
@@ -57,7 +60,7 @@ export class MCPClient {
       const wasDisconnected = !this.isConnected;
       this.isConnected = true;
       this.lastHealthCheck = new Date();
-      console.log(`✅ Connected to ${this.config.name} using SSE transport`);
+      this.debug?.log(`✅ Connected to ${this.config.name} using SSE transport`);
 
       if (wasDisconnected && this.connectionCallbacks.onReconnect) {
         this.connectionCallbacks.onReconnect(this.config.name);
@@ -71,7 +74,7 @@ export class MCPClient {
       this.client = undefined;
       const wasConnected = this.isConnected;
       this.isConnected = false;
-      console.log(`🔌 Disconnected from ${this.config.name}`);
+      this.debug?.log(`🔌 Disconnected from ${this.config.name}`);
 
       if (wasConnected && this.connectionCallbacks.onDisconnect) {
         this.connectionCallbacks.onDisconnect(this.config.name);
@@ -81,7 +84,7 @@ export class MCPClient {
 
   private markAsDisconnected(): void {
     if (this.isConnected) {
-      console.log(`❌ Lost connection to ${this.config.name}`);
+      this.debug?.log(`❌ Lost connection to ${this.config.name}`);
       this.isConnected = false;
       this.client = undefined;
 
@@ -102,7 +105,7 @@ export class MCPClient {
       this.lastHealthCheck = new Date();
       return true;
     } catch (error) {
-      console.log(`🔍 Health check failed for ${this.config.name}:`, error);
+      this.debug?.log(`🔍 Health check failed for ${this.config.name}:`, error);
       this.markAsDisconnected();
       return false;
     }
@@ -126,7 +129,7 @@ export class MCPClient {
     }
 
     try {
-      console.log(`🔍 Querying ${this.config.name} with parameters:`, parameters);
+      this.debug?.log(`🔍 Querying ${this.config.name} with parameters:`, parameters);
 
       // List available tools
       const tools = await this.client?.listTools();
@@ -139,7 +142,7 @@ export class MCPClient {
         };
       }
 
-      console.log(
+      this.debug?.log(
         `📋 Available tools for ${this.config.name}:`,
         tools.tools.map((t) => t.name)
       );
@@ -158,14 +161,12 @@ export class MCPClient {
       // Map parameters if needed
       const mappedParameters = this.mapParameters(toolToUse.name, parameters);
 
-      console.log(`🔧 Using tool "${toolToUse.name}" with parameters:`, mappedParameters);
+      this.debug?.log(`🔧 Using tool "${toolToUse.name}" with parameters:`, mappedParameters);
 
       const response = await this.client?.callTool({
         name: toolToUse.name,
         arguments: mappedParameters,
       });
-
-      //   console.log(`📥 Response from ${this.config.name}:`, response);
 
       return {
         success: true,
@@ -174,7 +175,7 @@ export class MCPClient {
         toolUsed: toolToUse.name,
       };
     } catch (error) {
-      console.error(`Error querying ${this.config.name}:`, error);
+      this.debug?.error(`Error querying ${this.config.name}:`, error);
 
       // Enhanced error detection for connection issues
       const errorMessage = error instanceof Error ? error.message : String(error);
@@ -207,7 +208,7 @@ export class MCPClient {
       const tools = await this.client.listTools();
       return tools.tools || [];
     } catch (error) {
-      console.warn(`Failed to list tools for ${this.config.name}:`, error);
+      this.debug?.warn(`Failed to list tools for ${this.config.name}:`, error);
       return [];
     }
   }
@@ -222,7 +223,7 @@ export class MCPClient {
       for (const configTool of this.config.tools) {
         const tool = availableTools.find((t) => t.name === configTool.toolName);
         if (tool) {
-          console.log(`🎯 Using configured tool: ${tool.name}`);
+          this.debug?.log(`🎯 Using configured tool: ${tool.name}`);
           return tool;
         }
       }
@@ -232,13 +233,13 @@ export class MCPClient {
     if (this.config.defaultTool) {
       const defaultTool = availableTools.find((t) => t.name === this.config.defaultTool);
       if (defaultTool) {
-        console.log(`🔧 Using default tool: ${defaultTool.name}`);
+        this.debug?.log(`🔧 Using default tool: ${defaultTool.name}`);
         return defaultTool;
       }
     }
 
     // Fallback: use the first available tool
-    console.log(`⚡ Using first available tool: ${availableTools[0].name}`);
+    this.debug?.log(`⚡ Using first available tool: ${availableTools[0].name}`);
     return availableTools[0];
   }
 
