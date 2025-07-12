@@ -4,9 +4,14 @@
   "description": "A fastify server with MCP server integration",
   "main": "dist/server.js",
   "type": "module",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
     "start": "tsx src/server.ts",
-    "build": "tsc",
+    "build": "tsc && bun run build:packages",
+    "build:packages": "bun run --filter=@mcp-client/manager build",
     "start:prod": "node dist/server.js",
     "dev": "tsx --watch src/server.ts",
     "lint": "biome lint .",
@@ -29,7 +34,7 @@
   "license": "ISC",
   "dependencies": {
     "@ai-sdk/google": "^0.0.26",
-    "@modelcontextprotocol/sdk": "^1.15.1",
+    "@mcp-client/manager": "workspace:*",
     "ai": "^3.2.18",
     "dotenv": "^16.4.5",
     "fastify": "^4.28.1",
