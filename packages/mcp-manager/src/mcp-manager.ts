@@ -21,7 +21,7 @@ export class MCPManager {
   // Configuration with defaults
   private readonly INITIAL_RETRY_DELAY: number;
   private readonly MAX_RETRY_DELAY: number;
-  private readonly RECONNECTION_CHECK_INTERVAL = 10000; // Check every 10 seconds
+  private readonly RECONNECTION_CHECK_INTERVAL: number;
   private readonly HEALTH_CHECK_INTERVAL: number;
   private readonly HEALTH_CHECK_ENABLED: boolean;
 
@@ -31,6 +31,7 @@ export class MCPManager {
     // Apply configuration with defaults
     this.INITIAL_RETRY_DELAY = config?.reconnection?.initialRetryDelay ?? 5000; // 5 seconds
     this.MAX_RETRY_DELAY = config?.reconnection?.maxRetryDelay ?? 300000; // 5 minutes
+    this.RECONNECTION_CHECK_INTERVAL = config?.reconnection?.checkInterval ?? 10000; // 10 seconds
     this.HEALTH_CHECK_INTERVAL = config?.healthCheck?.interval ?? 30000; // 30 seconds
     this.HEALTH_CHECK_ENABLED = config?.healthCheck?.enabled ?? true;
 

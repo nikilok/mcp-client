@@ -8,7 +8,7 @@ export const MCP_SERVERS: MCPServerConfig[] = [
     keywords: ['sponsorship', 'hmrc', 'list', 'company', 'sponsor'],
     tools: [
       {
-        toolName: 'mcp_python-hmrc-s_search_company_search_get',
+        toolName: 'search_company_search_get',
         parameterMapping: {
           company_name: 'company_name',
         },

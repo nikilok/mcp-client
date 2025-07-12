@@ -10,10 +10,6 @@ export class MCPService {
   constructor(serverConfigs: MCPServerConfig[], enableDebugging = false) {
     this.mcpManager = new MCPManager({
       servers: serverConfigs,
-      reconnection: {
-        initialRetryDelay: 5000,
-        maxRetryDelay: 300000,
-      },
       healthCheck: {
         enabled: true,
         interval: 30000,

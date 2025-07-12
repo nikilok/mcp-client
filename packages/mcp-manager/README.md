@@ -39,6 +39,7 @@ const manager = new MCPManager({
   reconnection: {
     initialRetryDelay: 5000,
     maxRetryDelay: 300000,
+    checkInterval: 10000, // Check for reconnections every 10 seconds
   },
   healthCheck: {
     enabled: true,
@@ -102,14 +103,15 @@ interface MCPServerConfig {
 interface MCPManagerConfig {
   servers: MCPServerConfig[];
   reconnection?: {
-    initialRetryDelay?: number;
-    maxRetryDelay?: number;
+    initialRetryDelay?: number; // Initial delay before first reconnection attempt (default: 5000ms)
+    maxRetryDelay?: number; // Maximum delay between reconnection attempts (default: 300000ms)
+    checkInterval?: number; // How often to check for reconnections (default: 10000ms)
   };
   healthCheck?: {
-    enabled?: boolean;
-    interval?: number;
+    enabled?: boolean; // Enable/disable health monitoring (default: true)
+    interval?: number; // Health check interval (default: 30000ms)
   };
-  enableDebugging?: boolean;
+  enableDebugging?: boolean; // Enable detailed logging (default: false)
 }
 ```
 
