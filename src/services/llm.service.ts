@@ -1,4 +1,5 @@
 import { google } from '@ai-sdk/google';
+import { generateText } from 'ai';
 import type { MCPQueryResult } from '../types';
 
 export class LLMService {
@@ -6,29 +7,18 @@ export class LLMService {
 
   async extractCompanyName(message: string): Promise<string | null> {
     try {
-      const response = await this.model.doGenerate({
-        inputFormat: 'messages',
-        mode: { type: 'regular' },
-        prompt: [
-          {
-            role: 'user',
-            content: [
-              {
-                type: 'text',
-                text: `Extract just the company name from this question. Respond with ONLY the company name, nothing else:
+      const { text } = await generateText({
+        model: this.model,
+        prompt: `Extract just the company name from this question. Respond with ONLY the company name, nothing else:
 Question: "${message}"
 
 For example:
 "Is Google on the sponsorship list?" -> "Google"
 "Where is Microsoft based?" -> "Microsoft"
 "Tell me about Apple's location" -> "Apple"`,
-              },
-            ],
-          },
-        ],
       });
 
-      return response.text?.trim() || null;
+      return text?.trim() || null;
     } catch (error) {
       console.error('Error extracting company name:', error);
       return null;
@@ -48,18 +38,12 @@ Please provide a helpful response incorporating this data.`;
     }
 
     try {
-      const response = await this.model.doGenerate({
-        inputFormat: 'messages',
-        mode: { type: 'regular' },
-        prompt: [
-          {
-            role: 'user',
-            content: [{ type: 'text', text: promptText }],
-          },
-        ],
+      const { text } = await generateText({
+        model: this.model,
+        prompt: promptText,
       });
 
-      return response.text || 'No response generated';
+      return text || 'No response generated';
     } catch (error) {
       console.error('Error generating response:', error);
       return 'Sorry, I encountered an error while generating a response.';
