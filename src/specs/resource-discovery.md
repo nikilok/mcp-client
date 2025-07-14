@@ -33,7 +33,7 @@ Replace the hardcoded keyword-based approach with an intelligent system that:
 #### 2. Enhanced MCP Service
 
 - **Dynamic Tool Discovery**: Queries servers at runtime to discover available tools
-- **Fallback Strategy**: Falls back to keyword-based approach if LLM selection fails
+- **Fallback Strategy**: Returns empty server array if LLM selection fails, with informative error messaging
 - **Parameter Extraction**: Uses LLM to extract relevant parameters from user queries
 
 #### 3. Simplified Configuration
@@ -188,9 +188,10 @@ The system MUST process user queries by:
 
 #### FR7: Fallback Mechanisms
 
-- The system MUST fall back to keyword-based matching if LLM selection fails
+- The system MUST return an empty MCP server array if LLM selection fails
 - The system MUST handle server connection failures gracefully
 - Query processing MUST continue if some servers are unavailable
+- The system MUST provide informative error messages when no servers can be selected
 
 ### 2.4 Query Processing Requirements
 
@@ -205,6 +206,7 @@ The system MUST process user queries by:
 - The system MUST combine results from multiple servers coherently
 - Response generation MUST provide context about which servers were used
 - The system MUST handle cases where no servers can answer the query
+- The system MUST provide helpful error messages when LLM selection returns empty server array
 
 ## 3.0 Migration Path and Breaking Changes
 
@@ -239,7 +241,7 @@ DISCOVERY_MAX_RETRIES=3
 During migration, the system will:
 
 - ✅ Support both old hardcoded and new dynamic configurations
-- ✅ Fall back to keyword matching if LLM selection fails
+- ✅ Return empty server array if LLM selection fails, with clear error messaging
 - ✅ Maintain existing API contracts
 - ✅ Preserve all current functionality while adding new capabilities
 
