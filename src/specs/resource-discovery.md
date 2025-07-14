@@ -240,7 +240,6 @@ DISCOVERY_MAX_RETRIES=3
 
 During migration, the system will:
 
-- ✅ Support both old hardcoded and new dynamic configurations
 - ✅ Return empty server array if LLM selection fails, with clear error messaging
 - ✅ Maintain existing API contracts
 - ✅ Preserve all current functionality while adding new capabilities
